@@ -1,0 +1,7 @@
+[package]
+name = "queue-bot"
+version = "0.0.1"
+authors = ["Belz"]
+edition = "2018"
+
+[dependencies]
