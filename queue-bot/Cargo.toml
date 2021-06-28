@@ -5,3 +5,18 @@ authors = ["Belz"]
 edition = "2018"
 
 [dependencies]
+log = "0.4.8"
+pretty_env_logger = "0.4.0"
+futures = "0.3"
+captcha = "0.0.8"
+regex = "1"
+anyhow = "1"
+once_cell = "1.8"
+
+[dependencies.tokio]
+version = "1"
+features = ["rt-multi-thread", "macros"]
+
+[dependencies.teloxide]
+version = "0.4"
+features = ["auto-send", "macros"]
