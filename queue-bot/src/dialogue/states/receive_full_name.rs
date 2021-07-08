@@ -1,9 +1,11 @@
+use serde::{Deserialize, Serialize};
 use teloxide::prelude::*;
 
-use crate::dialogue::states::{ReceivePhoneState, StartState};
+use crate::database::Database;
+use crate::dialogue::states::ReceivePhoneState;
 use crate::dialogue::Dialogue;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ReceiveFullNameState;
 
 #[teloxide(subtransition)]
@@ -18,15 +20,33 @@ async fn receive_full_name(
             .await?;
         next(Dialogue::ReceiveFullName(state))
     } else {
+        let last_name = full_name.next().unwrap();
         let name = full_name.next().unwrap();
         let patronymic = full_name.next().unwrap();
-        let surname = full_name.next().unwrap();
-        let receive_phone_state = ReceivePhoneState::new(
-            name.to_string(),
-            patronymic.to_string(),
-            surname.to_string(),
-        );
-        cx.answer("Введите номер телефона в формате +380XXXXXXXXX или 0XXXXXXXXX").await?;
-        next(Dialogue::ReceivePhone(receive_phone_state))
+        match Database::global()
+            .is_enrollee_valid(last_name, name, patronymic)
+            .await
+        {
+            Ok(success) => {
+                if success {
+                    let receive_phone_state = ReceivePhoneState::new(
+                        name.to_string(),
+                        patronymic.to_string(),
+                        last_name.to_string(),
+                    );
+                    cx.answer("Введите номер телефона в формате +380XXXXXXXXX или 0XXXXXXXXX")
+                        .await?;
+                    next(Dialogue::ReceivePhone(receive_phone_state))
+                } else {
+                    cx.answer("Вас не удалось найти в списке заявок на поступление, возможно вы ошибились в введенных данных. Попробуйте еще раз.").await?;
+                    next(Dialogue::ReceiveFullName(state))
+                }
+            }
+            Err(error) => {
+                cx.answer("Произошла ошибка при проверка валидности пользователя, попробуйте еще раз ввести ФИО").await?;
+                log::error!("Database error while enrollee check: {}", error);
+                next(Dialogue::ReceiveFullName(state))
+            }
+        }
     }
 }

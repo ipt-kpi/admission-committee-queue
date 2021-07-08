@@ -1,10 +1,11 @@
+use serde::{Deserialize, Serialize};
 use teloxide::prelude::*;
 
 use crate::captcha::Captcha;
 use crate::dialogue::states::{ReceiveFullNameState, StartState};
 use crate::dialogue::Dialogue;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ReceiveCaptchaState {
     answer: String,
     attempt_count: u8,
@@ -40,7 +41,6 @@ impl ReceiveCaptchaState {
     }
 
     fn check_attempt(&self) -> CheckState {
-        println!("{}", self.attempt_count);
         if self.attempt_count >= 30 {
             CheckState::Block
         } else if self.attempt_count % 10 == 0 {
@@ -73,8 +73,11 @@ async fn receive_captcha(
                 .await?;
             match Captcha::send(&cx).await {
                 Ok(answer) => next(Dialogue::ReceiveCaptcha(state.change_answer(answer))),
-                Err(_error) => {
-                    //TODO error
+                Err(error) => {
+                    cx.answer("Произошла ошибки при создании капчи")
+                        .send()
+                        .await?;
+                    log::error!("Failed to send captcha: {}", error);
                     next(Dialogue::Start(StartState))
                 }
             }
