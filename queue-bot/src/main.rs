@@ -1,13 +1,26 @@
-mod captcha;
-mod dialogue;
-
-use crate::dialogue::Dialogue;
+use std::sync::Arc;
 use teloxide::prelude::*;
+
+use crate::config::Config;
+use crate::database::Database;
+use crate::dialogue::Dialogue;
+
+mod captcha;
+mod config;
+mod database;
+mod dialogue;
+mod queue;
+mod user;
 
 #[tokio::main]
 async fn main() {
+    let config = Config::get_config("config.json")
+        .await
+        .expect("Failed to initialize config");
+    config.initialize_data().await.unwrap();
     run().await;
 }
+type In = DialogueWithCx<AutoSend<Bot>, Message, Dialogue, anyhow::Error>;
 
 async fn run() {
     teloxide::enable_logging!();
@@ -15,12 +28,18 @@ async fn run() {
 
     let bot = Bot::from_env().auto_send();
 
-    teloxide::dialogues_repl(bot, |message, dialogue| async move {
-        handle_message(message, dialogue)
-            .await
-            .expect("Something wrong with the bot!")
-    })
-    .await;
+    Dispatcher::new(bot)
+        .messages_handler(DialogueDispatcher::with_storage(
+            |DialogueWithCx { cx, dialogue }: In| async move {
+                let dialogue = dialogue.expect("std::convert::Infallible");
+                handle_message(cx, dialogue)
+                    .await
+                    .expect("Something wrong with the bot!")
+            },
+            Arc::new(Database::global()),
+        ))
+        .dispatch()
+        .await;
 }
 
 async fn handle_message(
