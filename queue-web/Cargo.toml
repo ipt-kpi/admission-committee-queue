@@ -1,0 +1,35 @@
+[package]
+name = "queue-web"
+version = "0.0.1"
+authors = ["Belz"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+bcrypt = "0.10"
+chrono = "0.4"
+env_logger = "0.8"
+hyper = "0.14"
+hyper-tls = "0.5"
+jsonwebtoken = "7"
+log = "0.4"
+once_cell = "1.8"
+serde_json = "1"
+warp = "0.3"
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+
+[dependencies.sqlx]
+version = "0.5"
+features = ["runtime-tokio-native-tls", "postgres", "uuid"]
+
+[dependencies.tokio]
+version = "1"
+features = ["rt-multi-thread","macros"]
+
+[dependencies.uuid]
+version = "0.8"
+features = ["v4", "serde"]

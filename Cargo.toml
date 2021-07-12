@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "abit-parser",
     "queue-bot",
-    "abit-parser"
+    "queue-web"
 ]
