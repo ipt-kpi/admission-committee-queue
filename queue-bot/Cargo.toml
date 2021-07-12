@@ -25,7 +25,7 @@ features = ["auto-send", "macros"]
 
 [dependencies.sqlx]
 version = "0.5"
-features = ["runtime-tokio-rustls", "postgres", "chrono"]
+features = ["runtime-tokio-native-tls", "postgres", "chrono"]
 
 [dependencies.chrono]
 version = "0.4"
