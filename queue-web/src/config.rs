@@ -2,12 +2,11 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 
-use crate::database::{DatabaseProvider, PostgresDatabase};
-
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    pub database: DatabaseProvider,
+    pub database_url: String,
+    pub max_connections: u32,
     pub address: String,
     pub recaptcha_token: String,
 }
@@ -33,8 +32,9 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            database_url: "postgresql://localhost:5432/postgres".to_string(),
+            max_connections: 5,
             address: "127.0.0.1:3030".to_string(),
-            database: DatabaseProvider::Postgres(PostgresDatabase::default()),
             recaptcha_token: "".to_string(),
         }
     }

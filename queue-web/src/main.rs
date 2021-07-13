@@ -5,7 +5,7 @@ use warp::Filter;
 
 use crate::captcha::ReCaptcha;
 use crate::config::Config;
-use crate::database::DatabaseProvider;
+use crate::database::Database;
 use crate::jwt::Jwt;
 
 mod captcha;
@@ -20,16 +20,14 @@ mod model;
 mod reject;
 
 pub struct Application {
-    database: DatabaseProvider,
+    database: Database,
     jwt: Jwt,
     recaptcha: ReCaptcha,
 }
 impl Application {
     async fn new(config: Config) -> Result<Self> {
-        let mut database = config.database;
-        database.init().await?;
         Ok(Application {
-            database,
+            database: Database::new(config.max_connections, &config.database_url).await?,
             jwt: Jwt::new()?,
             recaptcha: ReCaptcha::new(config.recaptcha_token),
         })
