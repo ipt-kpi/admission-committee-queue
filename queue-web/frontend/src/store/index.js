@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import user from "@/store/modules/user";
-import message from "@/store/modules/message";
+import user from "../store/modules/user";
+import message from "../store/modules/message";
 
 Vue.use(Vuex);
 

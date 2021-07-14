@@ -1,8 +1,9 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
-import Register from "@/views/Register";
-import Login from "@/views/Login";
+import Register from "../views/Register";
+import Login from "../views/Login";
+import Edit from "../views/admin/queue/Edit";
 import store from "../store";
 
 const originalPush = VueRouter.prototype.push;
@@ -61,6 +62,7 @@ const routes = [
   },
   {
     path: "/admin/queue/edit",
+    component: Edit,
     beforeEnter: ifAdmin
   }
 ];

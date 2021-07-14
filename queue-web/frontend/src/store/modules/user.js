@@ -11,10 +11,10 @@ const state = () => ({
 
 const getters = {
   isAuthenticated: state => {
-    return state.token != null;
+    return state.login;
   },
   isAdmin: (state, getters) => {
-    return getters.isAuthenticated && state.admin
+    return getters.isAuthenticated && state.admin;
   }
 };
 

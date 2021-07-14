@@ -1,12 +1,12 @@
 use anyhow::Result;
 use chrono::{Duration, NaiveDate, Utc};
-use serde::{Deserialize, Serialize};
 use sqlx::postgres::{PgPoolOptions, PgRow};
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
 use crate::handlers::user::auth::RegistrationInfo;
 use crate::hash;
+use crate::model::enrollee::Enrollee;
 use crate::model::user::User;
 
 pub struct Database {
@@ -128,10 +128,55 @@ impl Database {
     }
 
     pub async fn get_dates(&self) -> Result<Vec<NaiveDate>> {
-        sqlx::query("SELECT DISTINCT date FROM queue ORDER BY date ASC")
+        sqlx::query("SELECT DISTINCT date FROM queue ORDER BY date")
             .fetch_all(&self.pool)
             .await
             .map_err(|error| anyhow::anyhow!(error))
             .map(|dates| dates.iter().map(|row| row.get(0)).collect())
+    }
+
+    pub async fn get_enrollees(&self, dates: Vec<NaiveDate>) -> Result<Vec<Enrollee>> {
+        sqlx::query_as(
+            "SELECT id, last_name, name, patronymic, date, time, processed, username, phone_number 
+                FROM enrollee INNER JOIN queue ON enrollee.id = queue.enrollee
+                WHERE (SELECT date = ANY ($1))
+                ORDER BY date, time",
+        )
+        .bind(dates)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|error| anyhow::anyhow!(error))
+    }
+
+    pub async fn change_processed(&self, id: i64, state: bool) -> Result<()> {
+        sqlx::query("UPDATE queue SET processed = $1 WHERE enrollee = $2")
+            .bind(state)
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    pub async fn update_enrollee(&self, enrollee: Enrollee) -> Result<()> {
+        sqlx::query(
+            "UPDATE enrollee SET last_name = $1, name = $2, patronymic = $3, username = $4, phone_number = $5
+                WHERE id = $6"
+        )
+            .bind(enrollee.last_name)
+            .bind(enrollee.name)
+            .bind(enrollee.patronymic)
+            .bind(enrollee.username)
+            .bind(enrollee.phone_number)
+            .bind(enrollee.id)
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("UPDATE queue SET date = $1, time = $2, processed = $3 WHERE enrollee = $4")
+            .bind(enrollee.date)
+            .bind(enrollee.time)
+            .bind(enrollee.processed)
+            .bind(enrollee.id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
     }
 }
