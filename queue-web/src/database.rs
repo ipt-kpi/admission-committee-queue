@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::handlers::user::auth::RegistrationInfo;
 use crate::hash;
-use crate::model::enrollee::Enrollee;
+use crate::model::enrollee::{Enrollee, Status};
 use crate::model::user::User;
 
 pub struct Database {
@@ -137,7 +137,7 @@ impl Database {
 
     pub async fn get_enrollees(&self, dates: Vec<NaiveDate>) -> Result<Vec<Enrollee>> {
         sqlx::query_as(
-            "SELECT id, last_name, name, patronymic, date, time, processed, username, phone_number 
+            "SELECT id, last_name, name, patronymic, date, time, status, username, phone_number 
                 FROM enrollee INNER JOIN queue ON enrollee.id = queue.enrollee
                 WHERE (SELECT date = ANY ($1))
                 ORDER BY date, time",
@@ -148,9 +148,9 @@ impl Database {
         .map_err(|error| anyhow::anyhow!(error))
     }
 
-    pub async fn change_processed(&self, id: i64, state: bool) -> Result<()> {
-        sqlx::query("UPDATE queue SET processed = $1 WHERE enrollee = $2")
-            .bind(state)
+    pub async fn change_status(&self, id: i64, status: Status) -> Result<()> {
+        sqlx::query("UPDATE queue SET status = $1 WHERE enrollee = $2")
+            .bind(status)
             .bind(id)
             .execute(&self.pool)
             .await?;
@@ -170,10 +170,10 @@ impl Database {
             .bind(enrollee.id)
             .execute(&self.pool)
             .await?;
-        sqlx::query("UPDATE queue SET date = $1, time = $2, processed = $3 WHERE enrollee = $4")
+        sqlx::query("UPDATE queue SET date = $1, time = $2, status = $3 WHERE enrollee = $4")
             .bind(enrollee.date)
             .bind(enrollee.time)
-            .bind(enrollee.processed)
+            .bind(enrollee.status)
             .bind(enrollee.id)
             .execute(&self.pool)
             .await?;

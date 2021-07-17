@@ -10,6 +10,7 @@
         multiple
         outlined
         @input="fetchEnrollees"
+        :menu-props="{ minWidth: '250', maxHeight: '600' }"
       />
       <v-data-table
         :headers="headers"
@@ -82,11 +83,16 @@
                           label="Время"
                         ></v-text-field>
                       </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-checkbox
-                          v-model="editedItem.processed"
+                      <v-col cols="12" sm="7" md="5">
+                        <v-select
+                          v-model="editedItem.status"
+                          :items="statusItems"
+                          item-text="text"
+                          item-value="value"
                           label="Статус"
-                        ></v-checkbox>
+                          dense
+                          outlined
+                        ></v-select>
                       </v-col>
                     </v-row>
                   </v-container>
@@ -105,8 +111,14 @@
             </v-dialog>
           </v-toolbar>
         </template>
-        <template v-slot:item.processed="{ item }">
-          <v-checkbox v-model="item.processed" @click="changeStatus(item)"/>
+        <template v-slot:item.status="{ item }">
+          <v-select
+            v-model="item.status"
+            :items="statusItems"
+            item-text="text"
+            item-value="value"
+            @change="changeStatus(item)"
+          ></v-select>
         </template>
         <template v-slot:item.actions="{ item }">
           <v-icon small class="mr-2" @click="editItem(item)">
@@ -123,6 +135,11 @@ export default {
   data: () => ({
     items: [],
     value: [],
+    statusItems: [
+      { text: "Ожидает", value: "wait" },
+      { text: "Прошел", value: "processed" },
+      { text: "Отсутствует", value: "absent" }
+    ],
     search: "",
     dialog: false,
     timer: "",
@@ -132,10 +149,15 @@ export default {
       { text: "Отчество", value: "patronymic" },
       { text: "Дата", value: "date" },
       { text: "Время", value: "time" },
-      { text: "Статус", value: "processed" },
+      { text: "Статус", value: "status", width: "15%" },
       { text: "Тег", value: "username" },
       { text: "Телефон", value: "phoneNumber" },
-      { text: "Взаимодействие", value: "actions", sortable: false }
+      {
+        text: "Взаимодействие",
+        value: "actions",
+        sortable: false,
+        align: "center"
+      }
     ],
     enrollees: [],
     editedItem: {
@@ -146,7 +168,7 @@ export default {
       time: "",
       username: "",
       phoneNumber: "",
-      processed: false
+      status: "wait"
     },
     defaultItem: {
       lastName: "",
@@ -156,7 +178,7 @@ export default {
       time: "",
       username: "",
       phoneNumber: "",
-      processed: false
+      status: "wait"
     }
   }),
   watch: {
@@ -168,11 +190,12 @@ export default {
     this.fetchDates().then(dates => {
       this.items = dates;
       const today = new Date();
+
       this.value = [
         // eslint-disable-next-line no-unused-vars
         dates.find(function(item, index, array) {
           return new Date(item) >= today;
-        })
+        }) || dates[0]
       ];
       this.fetchEnrollees();
     });
@@ -194,9 +217,7 @@ export default {
     },
     changeStatus: async function(item) {
       try {
-        await this.$axios.post(
-          `/admin/queue/processed/${item.id}/${item.processed}`
-        );
+        await this.$axios.post(`/admin/queue/status/${item.id}/${item.status}`);
       } catch (error) {
         if (error.response.status === 400) {
           this.$store.commit("message/error", error.response.data.message);

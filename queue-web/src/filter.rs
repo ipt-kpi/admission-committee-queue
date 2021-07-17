@@ -1,6 +1,7 @@
 use warp::{Filter, Rejection, Reply};
 
 use crate::handlers::{admin, user};
+use crate::model::enrollee::Status;
 use crate::model::user::Role;
 use crate::Application;
 
@@ -69,10 +70,10 @@ fn queue_routes(
         .and(with_app(app))
         .and(jwt::jwt_filter(app, vec![Role::Admin]))
         .and_then(admin::queue::enrollees);
-    let processed = warp::path!("processed" / i64 / bool)
+    let processed = warp::path!("status" / i64 / Status)
         .and(with_app(app))
         .and(jwt::jwt_filter(app, vec![Role::Admin]))
-        .and_then(admin::queue::processed);
+        .and_then(admin::queue::status);
     let update = warp::path("update")
         .and(warp::post())
         .and(warp::body::json())

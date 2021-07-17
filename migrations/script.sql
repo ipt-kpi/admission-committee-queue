@@ -1,18 +1,20 @@
 CREATE TABLE IF NOT EXISTS enrollee (
     id BIGINT PRIMARY KEY,
-    username VARCHAR(255),
-    name VARCHAR(255),
-    patronymic VARCHAR(255),
-    last_name VARCHAR(255),
-    phone_number VARCHAR(13),
+    username VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    patronymic VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(13) NOT NULL,
     banned BOOLEAN
 );
 
+CREATE TYPE status AS ENUM ('wait', 'processed', 'absent');
+
 CREATE TABLE IF NOT EXISTS queue (
-    enrollee BIGINT REFERENCES enrollee (id),
-    date DATE,
-    time TIME,
-    processed BOOLEAN,
+    enrollee BIGINT REFERENCES enrollee (id) PRIMARY KEY,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    status status DEFAULT 'wait'::status,
     UNIQUE (date, time)
 );
 
@@ -95,8 +97,6 @@ BEGIN
     ON CONFLICT(enrollee) DO UPDATE SET date = excluded.date, time = excluded.time;
     RETURN exists;
 END $$  LANGUAGE plpgsql;
-
-
 
 CREATE TYPE role AS ENUM ('user', 'admin');
 

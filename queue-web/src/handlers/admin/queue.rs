@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use warp::Reply;
 
-use crate::model::enrollee::Enrollee;
+use crate::model::enrollee::{Enrollee, Status};
 use crate::model::user::AuthInfo;
 use crate::Application;
 use crate::{reject, reject_result};
@@ -25,13 +25,13 @@ pub async fn enrollees(
     })))
 }
 
-pub async fn processed(
+pub async fn status(
     id: i64,
-    state: bool,
+    status: Status,
     app: &'static Application,
     _auth_info: AuthInfo,
 ) -> Result<impl Reply, warp::Rejection> {
-    reject_result!(app.database.change_processed(id, state).await);
+    reject_result!(app.database.change_status(id, status).await);
     Ok(warp::reply::reply())
 }
 
