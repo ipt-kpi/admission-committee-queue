@@ -15,6 +15,8 @@ use teloxide::dispatching::dialogue::{Serializer, Storage};
 
 use crate::user::Enrollee;
 
+pub mod notifier;
+
 static INSTANCE: OnceCell<Database<Json>> = OnceCell::new();
 
 pub struct Database<S> {
@@ -40,7 +42,6 @@ impl Database<Json> {
     }
 
     pub async fn register(&self, enrollee: Enrollee) -> Result<()> {
-        println!("{}", enrollee.id);
         sqlx::query("INSERT INTO enrollee (id, username, name, patronymic, last_name, phone_number) VALUES ($1,$2,$3,$4,$5,$6)")
             .bind(enrollee.id)
             .bind(enrollee.username)

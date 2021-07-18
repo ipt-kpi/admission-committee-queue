@@ -1,7 +1,9 @@
+use anyhow::Result;
 use std::sync::Arc;
 use teloxide::prelude::*;
 
 use crate::config::Config;
+use crate::database::notifier::Notifier;
 use crate::database::Database;
 use crate::dialogue::Dialogue;
 
@@ -14,19 +16,24 @@ mod user;
 
 #[tokio::main]
 async fn main() {
-    let config = Config::get_config("config.json")
+    let config = Config::get_config("config.json.bak-bot")
         .await
         .expect("Failed to initialize config");
-    config.initialize_data().await.unwrap();
-    run().await;
+    let bot = Bot::from_env().auto_send();
+    let notifier = Notifier::new(&config.database_url, bot.clone())
+        .await
+        .expect("Failed to initialize notifier");
+    config
+        .initialize_data()
+        .await
+        .expect("Failed to initialize all global data");
+    tokio::try_join!(run(bot), notifier.run()).expect("Something get wrong with main tasks");
 }
 type In = DialogueWithCx<AutoSend<Bot>, Message, Dialogue, anyhow::Error>;
 
-async fn run() {
+async fn run(bot: AutoSend<Bot>) -> Result<()> {
     teloxide::enable_logging!();
     log::info!("Starting queue_bot...");
-
-    let bot = Bot::from_env().auto_send();
 
     Dispatcher::new(bot)
         .messages_handler(DialogueDispatcher::with_storage(
@@ -40,6 +47,7 @@ async fn run() {
         ))
         .dispatch()
         .await;
+    Ok(())
 }
 
 async fn handle_message(

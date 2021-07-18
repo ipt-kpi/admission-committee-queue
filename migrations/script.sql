@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+SET TIMEZONE='Europe/Kiev';
+
 CREATE TABLE IF NOT EXISTS refresh_sessions (
     id SERIAL PRIMARY KEY,
     user_id SERIAL REFERENCES users(id) ON DELETE CASCADE,
@@ -118,3 +120,30 @@ CREATE TABLE IF NOT EXISTS refresh_sessions (
     expires_in BIGINT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
+
+CREATE OR REPLACE FUNCTION notify_status() RETURNS TRIGGER AS $$
+DECLARE
+    record RECORD;
+    count INTEGER;
+BEGIN
+    IF CURRENT_DATE = NEW.date AND OLD.status = 'wait' THEN
+        FOR record IN
+            SELECT * FROM queue WHERE date = CURRENT_DATE AND status = 'wait'
+        LOOP
+            IF record.time >= NEW.time THEN
+                SELECT COUNT(*) INTO count FROM queue WHERE enrollee != record.enrollee AND date = record.date AND status = 'wait' AND time < record.time;
+                IF count = 5 OR count = 0 THEN
+                    PERFORM pg_notify('queue_status', row_to_json(row(record.enrollee, count))::text);
+                END IF;
+            END IF;
+        END LOOP;
+    END IF;
+        RETURN NULL;
+    END
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER queue_notify
+AFTER INSERT OR UPDATE OR DELETE ON queue
+    FOR EACH ROW EXECUTE PROCEDURE notify_status();
+
+

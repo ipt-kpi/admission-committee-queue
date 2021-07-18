@@ -49,7 +49,7 @@ impl Queue {
 
     pub fn get_days_keyboard(&self) -> KeyboardMarkup {
         let current_date = Local::now().date().naive_utc();
-        Self::get_two_columns_keyboard(
+        Self::gen_two_columns_keyboard(
             self.schedule
                 .keys()
                 .filter(|&date| date >= &current_date)
@@ -72,7 +72,7 @@ impl Queue {
             .await
         {
             Ok(intervals) => {
-                let keyboard = Self::get_two_columns_keyboard(intervals.into_iter());
+                let keyboard = Self::gen_two_columns_keyboard(intervals.into_iter());
                 Ok(keyboard.append_row(vec![KeyboardButton::new("Назад 🔙")]))
             }
             Err(error) => {
@@ -104,7 +104,7 @@ impl Queue {
             .await
         {
             Ok(intervals) => {
-                let keyboard = Self::get_two_columns_keyboard(intervals.into_iter());
+                let keyboard = Self::gen_two_columns_keyboard(intervals.into_iter());
                 Ok(keyboard.append_row(vec![
                     KeyboardButton::new("Назад 🔙"),
                     KeyboardButton::new("Выбор другой даты 🔙"),
@@ -117,7 +117,7 @@ impl Queue {
         }
     }
 
-    fn get_two_columns_keyboard(buttons: impl Iterator<Item = String>) -> KeyboardMarkup {
+    fn gen_two_columns_keyboard(buttons: impl Iterator<Item = String>) -> KeyboardMarkup {
         let keyboard = buttons
             .map(KeyboardButton::new)
             .collect::<Vec<_>>()
