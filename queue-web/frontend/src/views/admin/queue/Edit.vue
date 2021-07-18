@@ -261,4 +261,14 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style>
+.theme--dark.v-list-item::before {
+  opacity: 0;
+}
+.theme--dark.v-list-item--active::before {
+  opacity: 0;
+}
+.v-list .v-list-item--active .v-list-item__title {
+  color: white !important;
+}
+</style>
