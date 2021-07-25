@@ -2,7 +2,7 @@ use anyhow::Result;
 use chrono::{NaiveDate, NaiveTime};
 use serde::Deserialize;
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::fs::OpenOptions;
 use std::path::Path;
@@ -21,12 +21,12 @@ pub struct Config {
     pub database_url: String,
     pub max_connections: u32,
     #[serde(with = "date_format")]
-    pub schedule: HashMap<NaiveDate, Schedule>,
+    pub schedule: BTreeMap<NaiveDate, Schedule>,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         let date = NaiveDate::from_ymd(2021, 8, 1);
         let schedule = Schedule {
             start_time: NaiveTime::from_hms(10, 0, 0),
@@ -45,7 +45,7 @@ impl Default for Config {
 }
 
 impl Config {
-    pub async fn get_config<P: AsRef<Path>>(config_path: P) -> Result<Self> {
+    pub async fn new<P: AsRef<Path>>(config_path: P) -> Result<Self> {
         if let Some(path) = config_path.as_ref().parent() {
             fs::create_dir_all(path)?;
         }

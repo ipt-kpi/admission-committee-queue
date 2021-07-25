@@ -1,12 +1,12 @@
 use chrono::NaiveDate;
 use serde::{Deserialize, Deserializer, Serializer};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::queue::Schedule;
 
 const FORMAT: &'static str = "%Y-%m-%d";
 
-pub fn serialize<S>(map: &HashMap<NaiveDate, Schedule>, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize<S>(map: &BTreeMap<NaiveDate, Schedule>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -16,11 +16,11 @@ where
     serializer.collect_map(map)
 }
 
-pub fn deserialize<'de, D>(deserializer: D) -> Result<HashMap<NaiveDate, Schedule>, D::Error>
+pub fn deserialize<'de, D>(deserializer: D) -> Result<BTreeMap<NaiveDate, Schedule>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let v = HashMap::<String, Schedule>::deserialize(deserializer)?;
+    let v = BTreeMap::<String, Schedule>::deserialize(deserializer)?;
     v.into_iter()
         .map(|(k, v)| {
             Ok((
