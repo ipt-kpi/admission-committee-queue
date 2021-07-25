@@ -15,22 +15,22 @@ impl Parser {
     }
     pub async fn get_info(&self, code: &str, file: &mut File) -> Result<()> {
         let url = &format!("{}{}", &self.url, code);
-        let document = Self::get_html(url).await?;
-        let pages = Self::get_pages(&document).await?;
+        let document = Self::parse_html(url).await?;
+        let pages = Self::parse_pages(&document).await?;
 
         if pages == 1 {
-            let names = Self::get_names(document).await;
-            file.write_all(names.join("\n").as_bytes()).await?;
+            let names = Self::parse_names(document).await;
+            file.write_all((names.join("\n") + "\n").as_bytes()).await?;
             return Ok(());
         }
 
         let stream = stream::iter(2..=pages)
-            .map(|page| async move { Self::get_html(&format!("{}/?page={}", url, page)).await })
+            .map(|page| async move { Self::parse_html(&format!("{}/?page={}", url, page)).await })
             .buffer_unordered(3)
             .chain(stream::once(async { Ok::<Html, Error>(document) }))
             .map(|document| async {
                 match document {
-                    Ok(document) => Ok(Self::get_names(document).await),
+                    Ok(document) => Ok(Self::parse_names(document).await),
                     Err(error) => Err(error),
                 }
             })
@@ -43,35 +43,38 @@ impl Parser {
         Ok(())
     }
 
-    async fn get_pages(document: &Html) -> Result<u8> {
+    async fn parse_pages(document: &Html) -> Result<u8> {
         let div_selector =
             Selector::parse(r#"div[class=""]"#).expect("Failed to parse div selector");
-        let div = document
-            .select(&div_selector)
-            .last()
-            .expect("Failed to parse page number");
-        let selector =
-            Selector::parse(r#"a[data-scroll-on-load=""].btn.btn-default.ajax.secondary-text"#)
+        let pages = match document.select(&div_selector).last() {
+            Some(div) => {
+                let selector = Selector::parse(
+                    r#"a[data-scroll-on-load=""].btn.btn-default.ajax.secondary-text"#,
+                )
                 .expect("Failed to parse page selector");
-        let mut elements = div.select(&selector);
-        Ok(match elements.by_ref().count() {
-            0 => 1,
-            x if x < 5 => (x - 1) as u8,
-            x => elements
-                .skip(x - 2)
-                .next()
-                .context("Failed to get pages number")?
-                .inner_html()
-                .parse()?,
-        })
+                let mut elements = div.select(&selector);
+                match elements.by_ref().count() {
+                    0 => 1,
+                    x if x < 5 => (x - 1) as u8,
+                    x => elements
+                        .skip(x - 2)
+                        .next()
+                        .context("Failed to get pages number")?
+                        .inner_html()
+                        .parse()?,
+                }
+            }
+            None => 1,
+        };
+        Ok(pages)
     }
 
-    async fn get_html(url: &str) -> Result<Html> {
+    async fn parse_html(url: &str) -> Result<Html> {
         let response = reqwest::get(url).await?.text().await?;
         Ok(Html::parse_document(&response))
     }
 
-    async fn get_names(document: Html) -> Vec<String> {
+    async fn parse_names(document: Html) -> Vec<String> {
         let selector =
             Selector::parse(r#"a[href^="/#search-"]"#).expect("Failed to parse name selector");
         document
