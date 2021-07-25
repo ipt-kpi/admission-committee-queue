@@ -134,7 +134,7 @@ BEGIN
         LOOP
             IF record.time >= NEW.time THEN
                 SELECT COUNT(*) INTO count FROM queue WHERE enrollee != record.enrollee AND date = record.date AND status = 'wait' AND time < record.time;
-                IF (SELECT notification FROM enrollee WHERE id = record.enrollee) OR count = 5 OR count = 0 THEN
+                IF (SELECT notification FROM enrollee WHERE id = record.enrollee) OR count = 5 OR count = 1 OR count = 0 THEN
                     PERFORM pg_notify('queue_status', row_to_json(row(record.enrollee, count))::text);
                 END IF;
             END IF;
