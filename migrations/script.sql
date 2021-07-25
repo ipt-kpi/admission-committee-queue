@@ -1,17 +1,19 @@
 CREATE TABLE IF NOT EXISTS enrollee (
-    id BIGINT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
+    chat_id BIGINT UNIQUE,
     username VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     patronymic VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(13) NOT NULL,
-    banned BOOLEAN
+    banned BOOLEAN NOT NULL DEFAULT FALSE,
+    notification BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TYPE status AS ENUM ('wait', 'processed', 'absent');
 
 CREATE TABLE IF NOT EXISTS queue (
-    enrollee BIGINT REFERENCES enrollee (id) PRIMARY KEY,
+    enrollee INTEGER REFERENCES enrollee(id) PRIMARY KEY,
     date DATE NOT NULL,
     time TIME NOT NULL,
     status status DEFAULT 'wait'::status,
@@ -63,7 +65,6 @@ BEGIN
         ) as intervals WHERE intervals.count > 0;
 END $$  LANGUAGE plpgsql;
 
-DROP FUNCTION is_enrollee_valid(last_name_t VARCHAR, name_t VARCHAR, patronymic_t VARCHAR);
 CREATE OR REPLACE FUNCTION is_enrollee_valid(
     last_name_t VARCHAR(255),
     name_t VARCHAR(255),
@@ -83,17 +84,18 @@ BEGIN
 END $$  LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION register_in_queue(
-    id BIGINT,
+    chat_id_t BIGINT,
     date DATE,
     time_t TIME
 ) RETURNS bool
 AS $$
-    DECLARE
-        exists bool;
+DECLARE
+    exists bool = exists(SELECT 1 FROM queue JOIN enrollee e on e.id = queue.enrollee WHERE chat_id = chat_id_t);
+    enrollee_id INTEGER;
 BEGIN
-    exists := exists(SELECT 1 FROM queue WHERE enrollee = id);
+    SELECT id INTO enrollee_id FROM enrollee WHERE chat_id = chat_id_t;
     INSERT INTO queue(enrollee, date, time)
-    VALUES (id, date, time_t)
+    VALUES (enrollee_id, date, time_t)
     ON CONFLICT(enrollee) DO UPDATE SET date = excluded.date, time = excluded.time;
     RETURN exists;
 END $$  LANGUAGE plpgsql;
@@ -132,7 +134,7 @@ BEGIN
         LOOP
             IF record.time >= NEW.time THEN
                 SELECT COUNT(*) INTO count FROM queue WHERE enrollee != record.enrollee AND date = record.date AND status = 'wait' AND time < record.time;
-                IF count = 5 OR count = 0 THEN
+                IF (SELECT notification FROM enrollee WHERE id = record.enrollee) OR count = 5 OR count = 0 THEN
                     PERFORM pg_notify('queue_status', row_to_json(row(record.enrollee, count))::text);
                 END IF;
             END IF;
@@ -147,3 +149,11 @@ AFTER INSERT OR UPDATE OR DELETE ON queue
     FOR EACH ROW EXECUTE PROCEDURE notify_status();
 
 
+--import names
+COPY parsed_names(name) FROM 'path' CSV;
+
+--export queue
+COPY (
+    SELECT last_name, name, patronymic, date, time, phone_number, username, status, id, chat_id
+    FROM queue JOIN enrollee e on e.chat_id = queue.enrollee
+) TO 'path' DELIMITER ',' CSV HEADER;
