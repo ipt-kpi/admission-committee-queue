@@ -51,8 +51,7 @@ _axios.interceptors.response.use(
   function(error) {
     if (error.response) {
       if (error.response.status === 401) {
-        //store.commit("user/logout");
-        store.commit("logout");
+        store.commit("user/logout");
       }
     } else {
       store.commit("error", "Произошла ошибка подключения");

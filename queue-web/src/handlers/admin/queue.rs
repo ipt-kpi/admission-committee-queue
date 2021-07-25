@@ -43,3 +43,13 @@ pub async fn update(
     reject_result!(app.database.update_enrollee(enrollee).await);
     Ok(warp::reply::reply())
 }
+
+pub async fn students_queue(
+    app: &'static Application,
+    _auth_info: AuthInfo,
+) -> Result<impl Reply, warp::Rejection> {
+    match app.database.get_students_queue().await {
+        Ok(queue) => Ok(queue),
+        Err(error) => reject!(error),
+    }
+}

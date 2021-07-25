@@ -3,7 +3,7 @@
     <v-flex xs12 sm8 md4>
       <v-card>
         <v-form ref="form" v-model="valid" @submit.prevent="submit()">
-          <v-toolbar class="elevation-12" color="grey lighten-3" dark flat>
+          <v-toolbar class="elevation-12" color="primary" dark flat>
             <v-toolbar-title>Регистрация</v-toolbar-title>
           </v-toolbar>
           <div v-if="loaded">
@@ -115,7 +115,7 @@ export default {
         password: [
           v => v.length <= 32 || "Максимум 32 символа",
           v => v.length >= 6 || "Минимум 6 символа",
-          v => !!v || "Пароль обязателен",
+          v => !!v || "Пароль обязателен"
         ]
       }
     };

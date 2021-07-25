@@ -1,6 +1,7 @@
 use chrono::{NaiveDate, NaiveTime};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
+use std::fmt;
 use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, FromRow)]
@@ -24,6 +25,26 @@ pub enum Status {
     Wait,
     Processed,
     Absent,
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Status::Wait => {
+                    "wait"
+                }
+                Status::Processed => {
+                    "processed"
+                }
+                Status::Absent => {
+                    "absent"
+                }
+            }
+        )
+    }
 }
 
 impl FromStr for Status {

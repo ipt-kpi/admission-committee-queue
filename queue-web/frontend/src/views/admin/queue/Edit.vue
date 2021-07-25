@@ -1,6 +1,6 @@
 <template>
   <v-layout fluid fill-height align-center justify-center>
-    <v-flex xs12 sm9 md9>
+    <v-flex xs12 sm10 md10>
       <v-select
         class="mt-10"
         v-model="value"
@@ -23,6 +23,9 @@
           <v-toolbar flat>
             <v-toolbar-title>Список студентов</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
+            <v-btn v-on:click="fetchStudentsQueue" elevation="2"
+              >Экспорт очереди</v-btn
+            >
             <v-spacer></v-spacer>
 
             <v-text-field
@@ -144,6 +147,7 @@ export default {
     dialog: false,
     timer: "",
     headers: [
+      { text: "Номер", value: "id" },
       { text: "Фамилия", value: "lastName" },
       { text: "Имя", value: "name" },
       { text: "Отчество", value: "patronymic" },
@@ -214,6 +218,24 @@ export default {
         this.value
       );
       this.enrollees = response.data.enrollees;
+    },
+    fetchStudentsQueue: async function() {
+      try {
+        await this.$axios({
+          url: "/admin/queue/students-queue",
+          method: "GET",
+          responseType: "blob"
+        }).then(response => {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", "queue.csv");
+          document.body.appendChild(link);
+          link.click();
+        });
+      } catch (error) {
+        this.$store.commit("message/error", error.response.data.message);
+      }
     },
     changeStatus: async function(item) {
       try {

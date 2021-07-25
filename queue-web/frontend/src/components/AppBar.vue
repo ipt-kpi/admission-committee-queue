@@ -96,23 +96,23 @@
             <span class="mr-2">Пользователь</span>
           </v-btn>
         </span>
-      </span>
-      <span v-if="$store.state.user.admin">
-        <v-menu offset-y>
-          <template v-slot:activator="{ on }">
-            <v-btn text v-on="on">
-              Очередь
-            </v-btn>
-          </template>
-          <v-list>
-            <v-list-item @click="$router.push('/admin/queue/register')">
-              <v-list-item-title>Регистрация</v-list-item-title>
-            </v-list-item>
-            <v-list-item @click="$router.push('/admin/queue/edit')">
-              <v-list-item-title>Редактирование</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+``        <span v-if="$store.state.user.admin">
+          <v-menu offset-y>
+            <template v-slot:activator="{ on }">
+              <v-btn text v-on="on">
+                Очередь
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item @click="$router.push('/admin/queue/register')">
+                <v-list-item-title>Регистрация</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="$router.push('/admin/queue/edit')">
+                <v-list-item-title>Редактирование</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </span>
       </span>
       <v-spacer />
       <span class="hidden-md-and-down">

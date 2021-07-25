@@ -80,7 +80,16 @@ fn queue_routes(
         .and(with_app(app))
         .and(jwt::jwt_filter(app, vec![Role::Admin]))
         .and_then(admin::queue::update);
-    let routes = dates.or(enrollees).or(processed).or(update);
+    let students_queue = warp::path("students-queue")
+        .and(warp::get())
+        .and(with_app(app))
+        .and(jwt::jwt_filter(app, vec![Role::Admin]))
+        .and_then(admin::queue::students_queue);
+    let routes = dates
+        .or(enrollees)
+        .or(processed)
+        .or(update)
+        .or(students_queue);
     warp::path("queue").and(routes)
 }
 

@@ -7,6 +7,7 @@ use uuid::Uuid;
 use crate::handlers::user::auth::RegistrationInfo;
 use crate::hash;
 use crate::model::enrollee::{Enrollee, Status};
+use crate::model::queue::{Queue, StudentsQueue};
 use crate::model::user::User;
 
 pub struct Database {
@@ -178,5 +179,16 @@ impl Database {
             .execute(&self.pool)
             .await?;
         Ok(())
+    }
+
+    pub async fn get_students_queue(&self) -> Result<StudentsQueue> {
+        sqlx::query_as::<_, Queue>(
+            "SELECT last_name, name, patronymic, date, time, phone_number, username, status, id
+                FROM queue JOIN enrollee e on e.id = queue.enrollee",
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|error| anyhow::anyhow!(error))
+        .map(|queue| StudentsQueue(queue))
     }
 }

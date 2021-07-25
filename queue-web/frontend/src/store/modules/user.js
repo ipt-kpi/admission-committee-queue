@@ -22,7 +22,6 @@ const actions = {};
 
 const mutations = {
   login: (state, payload) => {
-    console.log(payload.data);
     if (payload.data.role === "admin") {
       localStorage.setItem("admin", "true");
       state.admin = true;
