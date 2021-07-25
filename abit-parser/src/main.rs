@@ -74,7 +74,7 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
     let regex = Regex::new("^[0-9]{6}$").expect("Failed to create regex");
 
     let args = AppArgs {
-        single_file: pargs.opt_value_from_str("--single-file")?.unwrap_or(false),
+        single_file: pargs.opt_value_from_str("--single-file")?.unwrap_or(true),
         year: pargs.opt_value_from_fn("--year", parse_year)?.unwrap_or(21),
         input: {
             pargs
