@@ -16,7 +16,7 @@ mod user;
 
 #[tokio::main]
 async fn main() {
-    let config = Config::get_config("config.json.bak-bot")
+    let config = Config::new("config.json.bak-bot")
         .await
         .expect("Failed to initialize config");
     let bot = Bot::from_env().auto_send();
@@ -56,9 +56,31 @@ async fn handle_message(
 ) -> TransitionOut<Dialogue> {
     match cx.update.text().map(ToOwned::to_owned) {
         None => {
-            cx.answer("Send me a text message.").await?;
+            cx.answer("Відправ мені текстове повідомлення").await?;
             next(dialogue)
         }
-        Some(ans) => dialogue.react(cx, ans).await,
+        Some(ans) => {
+            if ans.starts_with("/toggle_notification") {
+                match Database::global()
+                    .toggle_notification(cx.update.chat_id())
+                    .await
+                {
+                    Ok(state) => {
+                        if state {
+                            cx.answer("Режим слідкування увімкнено").await?;
+                        } else {
+                            cx.answer("Режим слідкування вимкнено").await?;
+                        }
+                    }
+                    Err(error) => {
+                        cx.answer("Не вдалося налаштувати повідомлення").await?;
+                        log::error!("Database error: {}", error);
+                    }
+                };
+                next(dialogue)
+            } else {
+                dialogue.react(cx, ans).await
+            }
+        }
     }
 }

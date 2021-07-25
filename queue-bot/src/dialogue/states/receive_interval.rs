@@ -17,8 +17,8 @@ async fn receive_interval(
     cx: TransitionIn<AutoSend<Bot>>,
     ans: String,
 ) -> TransitionOut<Dialogue> {
-    if ans == "Назад 🔙" {
-        cx.answer("Выберите день недели")
+    if ans == "Повернутись назад 🔙" {
+        cx.answer("Виберіть день тижня")
             .reply_markup(Queue::global().get_days_keyboard())
             .await?;
         next(Dialogue::ReceiveDay(ReceiveDayState))
@@ -31,7 +31,7 @@ async fn receive_interval(
                     .await
                 {
                     Ok(keyboard) => {
-                        cx.answer("Выберите время")
+                        cx.answer("Виберіть час")
                             .reply_markup(keyboard)
                             .send()
                             .await?;
@@ -48,7 +48,7 @@ async fn receive_interval(
                 }
             }
             None => {
-                cx.answer("Введен не верный формат времени").await?;
+                cx.answer("Введено невірний формат часу").await?;
                 next(Dialogue::ReceiveInterval(state))
             }
         }

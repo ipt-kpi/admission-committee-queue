@@ -17,14 +17,14 @@ async fn start(
     ans: String,
 ) -> TransitionOut<Dialogue> {
     if ans == "✅" {
-        cx.answer("Введите капчу")
+        cx.answer("Введіть капчу")
             .reply_markup(ReplyMarkup::kb_remove())
             .send()
             .await?;
         match Captcha::send(&cx).await {
             Ok(answer) => next(Dialogue::ReceiveCaptcha(ReceiveCaptchaState::new(answer))),
             Err(error) => {
-                cx.answer("Произошла ошибки при создании капчи")
+                cx.answer("Відбулася помилки при створенні капчи")
                     .send()
                     .await?;
                 log::error!("Failed to send captcha: {}", error);
@@ -33,8 +33,7 @@ async fn start(
         }
     } else {
         cx.answer(
-            "Чтобы продолжить работу с ботом согласитесь с сбором и обработкой личных данных \
-            в виде ФИО и номера телефона",
+            "Щоб продовжити роботу з ботом, погодьтеся зі збором та обробкою персональних даних у вигляді ПІБ та номеру телефону",
         )
         .reply_markup(Queue::global().get_agree_keyboard())
         .send()

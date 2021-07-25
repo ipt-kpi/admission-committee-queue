@@ -1,5 +1,5 @@
 pub struct Enrollee {
-    pub id: i64,
+    pub chat_id: i64,
     pub username: String,
     pub name: String,
     pub patronymic: String,

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use teloxide::prelude::*;
 
 use crate::captcha::Captcha;
-use crate::dialogue::states::{ReceiveFullNameState, StartState};
+use crate::dialogue::states::{BannedState, ReceiveFullNameState, StartState};
 use crate::dialogue::Dialogue;
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -59,22 +59,22 @@ async fn receive_captcha(
 ) -> TransitionOut<Dialogue> {
     match state.check_answer(ans) {
         CheckState::Correct => {
-            cx.answer("Капча верная").await?;
-            cx.answer("Введите свое ФИО через пробел. Например: 'Иван Иванович Иванов'")
+            cx.answer("Капча вірна").await?;
+            cx.answer("Введіть своє ПІБ через пробіл. Наприклад: 'Іванов Іван Іванович'")
                 .await?;
             next(Dialogue::ReceiveFullName(ReceiveFullNameState))
         }
         CheckState::Incorrect => {
-            cx.answer("Капча неверная").await?;
+            cx.answer("Капча невірна").await?;
             next(Dialogue::ReceiveCaptcha(state))
         }
         CheckState::Update => {
-            cx.answer("Кол-во попыток слишком большое, генерируем новую капчу")
+            cx.answer("Занадто велика кількість спроб, генеруємо нову капчу")
                 .await?;
             match Captcha::send(&cx).await {
                 Ok(answer) => next(Dialogue::ReceiveCaptcha(state.change_answer(answer))),
                 Err(error) => {
-                    cx.answer("Произошла ошибки при создании капчи")
+                    cx.answer("Виникла помилка при створенні капчі")
                         .send()
                         .await?;
                     log::error!("Failed to send captcha: {}", error);
@@ -83,9 +83,8 @@ async fn receive_captcha(
             }
         }
         CheckState::Block => {
-            //TODO block
-            cx.answer("Бан").await?;
-            next(Dialogue::ReceiveCaptcha(state))
+            cx.answer("Ви були заблоковані, якщо вважаєте, що виникла помилка то зверніться до оператора технічної підтримки").await?;
+            next(Dialogue::Banned(BannedState))
         }
     }
 }

@@ -21,11 +21,11 @@ async fn receive_day(
     ans: String,
 ) -> TransitionOut<Dialogue> {
     match ans.as_str() {
-        "Назад 🔙" => {
+        "Повернутись назад 🔙" => {
             let date = state.date;
             match Queue::global().get_intervals_keyboard(date).await {
                 Ok(keyboard) => {
-                    cx.answer("Выберите промежуток времени")
+                    cx.answer("Виберіть проміжок часу")
                         .reply_markup(keyboard)
                         .await?;
                     next(Dialogue::ReceiveInterval(ReceiveIntervalState { date }))
@@ -36,88 +36,100 @@ async fn receive_day(
                 }
             }
         }
-        "Выбор другой даты 🔙" => {
-            cx.answer("Выберите день недели для записи")
+        "Вибір іншої дати 🔙" => {
+            cx.answer("Виберіть день тижня для запису")
                 .reply_markup(Queue::global().get_days_keyboard())
                 .await?;
             next(Dialogue::ReceiveDay(ReceiveDayState))
         }
-        time => {
-            match NaiveTime::parse_from_str(time, "%H:%M") {
-                Ok(time) => {
-                    let date = state.date;
-                    let current_date = Local::now().date().naive_utc();
-                    if current_date > date {
-                        cx.answer(
-                            "Вы не можете больше записаться на данный день, выберите другое число",
-                        )
+        time => match NaiveTime::parse_from_str(time, "%H:%M") {
+            Ok(time) => {
+                let date = state.date;
+                let current_date = Local::now().date().naive_utc();
+                if current_date > date {
+                    cx.answer("Ви не можете більше записатися на цей день, виберіть інше число")
                         .reply_markup(Queue::global().get_days_keyboard())
                         .await?;
-                        return next(Dialogue::ReceiveDay(ReceiveDayState));
-                    }
-                    let database = Database::global();
-                    match database.check_time(date, time).await {
-                        Ok(exists) => {
-                            if exists {
-                                match Queue::global()
-                                    .get_relevant_time_keyboard(
-                                        date,
-                                        state.first_time,
-                                        state.second_time,
+                    return next(Dialogue::ReceiveDay(ReceiveDayState));
+                }
+                let database = Database::global();
+                match database.check_time(date, time).await {
+                    Ok(exists) => {
+                        if exists {
+                            match Queue::global()
+                                .get_relevant_time_keyboard(
+                                    date,
+                                    state.first_time,
+                                    state.second_time,
+                                )
+                                .await
+                            {
+                                Ok(keyboard) => {
+                                    cx.answer(
+                                        "Не вдалося записатися на даний час, його вже зайнято",
                                     )
-                                    .await
-                                {
-                                    Ok(keyboard) => {
-                                        cx.answer(
-                                            "Не удалось записаться на данное время, его уже заняли",
-                                        )
-                                        .reply_markup(keyboard)
-                                        .await?;
-                                    }
-                                    Err(error) => {
-                                        cx.answer(error.to_string()).await?;
-                                    }
+                                    .reply_markup(keyboard)
+                                    .await?;
                                 }
-                                next(Dialogue::ReceiveTime(state))
-                            } else {
-                                match database
-                                    .register_in_queue(cx.update.chat_id(), date, time)
-                                    .await
-                                {
-                                    Ok(old_record) => {
-                                        if old_record {
-                                            cx.answer(format!("Вы были зарегистрированы в очереди на новое время: {} {} (старая запись не актуальна)", date, time)).await?;
-                                        } else {
-                                            cx.answer(format!(
-                                                "Вы были зарегистрированы в очереди на: {} {}",
-                                                date, time
-                                            ))
-                                            .await?;
+                                Err(error) => {
+                                    cx.answer(error.to_string()).await?;
+                                }
+                            }
+                            next(Dialogue::ReceiveTime(state))
+                        } else {
+                            match database
+                                .register_in_queue(cx.update.chat_id(), date, time)
+                                .await
+                            {
+                                Ok(old_record) => {
+                                    match Queue::global()
+                                        .get_relevant_time_keyboard(
+                                            date,
+                                            state.first_time,
+                                            state.second_time,
+                                        )
+                                        .await
+                                    {
+                                        Ok(keyboard) => {
+                                            let msg = if old_record {
+                                                cx.answer(format!("Ви були зареєстровані в черзі на новий час: {} {} (старий запис не актуальний)", date, time))
+                                            } else {
+                                                cx.answer(format!(
+                                                    "Ви були зареєстровані в черзі на: {} {}\nЯкщо бажаєте завжди слідкувати за чергою то введіть /toggle_notification (це ж саме й для вимкнення)",
+                                                    date, time
+                                                ))
+                                            };
+                                            msg.reply_markup(keyboard).await?;
                                         }
-                                        //TODO new state
-                                        next(Dialogue::ReceiveTime(state))
+                                        Err(error) => {
+                                            cx.answer(error.to_string()).await?;
+                                        }
                                     }
-                                    Err(error) => {
-                                        cx.answer("Не удалось зарегистрироватся в очереди, возникла ошибка").await?;
-                                        log::error!("Database error: {}", error);
-                                        next(Dialogue::ReceiveTime(state))
-                                    }
+                                    next(Dialogue::ReceiveTime(state))
+                                }
+                                Err(error) => {
+                                    cx.answer(
+                                        "Не вдалося зареєструватись в черзі, виникла помилка",
+                                    )
+                                    .await?;
+                                    log::error!("Database error: {}", error);
+                                    next(Dialogue::ReceiveTime(state))
                                 }
                             }
                         }
-                        Err(error) => {
-                            cx.answer("Не удалось проверить занято ли выбранное время")
-                                .await?;
-                            log::error!("Database error: {}", error);
-                            next(Dialogue::ReceiveTime(state))
-                        }
+                    }
+                    Err(error) => {
+                        cx.answer("Не вдалося перевірити чи зайнятий обраний час")
+                            .await?;
+                        log::error!("Database error: {}", error);
+                        next(Dialogue::ReceiveTime(state))
                     }
                 }
-                Err(_) => {
-                    cx.answer("Введен не верный формат времени").await?;
-                    next(Dialogue::ReceiveTime(state))
-                }
             }
-        }
+            Err(_) => {
+                cx.answer("Введено невірний формат часу").await?;
+                next(Dialogue::ReceiveTime(state))
+            }
+        },
     }
 }

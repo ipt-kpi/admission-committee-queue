@@ -18,7 +18,7 @@ async fn receive_day(
     match NaiveDate::parse_from_str(&format!("{}.2021", ans), "%d.%m.%Y") {
         Ok(date) => match Queue::global().get_intervals_keyboard(date).await {
             Ok(keyboard) => {
-                cx.answer("Выберите промежуток времени")
+                cx.answer("Оберіть проміжок часу")
                     .reply_markup(keyboard)
                     .await?;
                 next(Dialogue::ReceiveInterval(ReceiveIntervalState { date }))
@@ -30,7 +30,7 @@ async fn receive_day(
             }
         },
         Err(_) => {
-            cx.answer("Введен неверный формат дня").await?;
+            cx.answer("Введено невірний формат дня").await?;
             next(Dialogue::ReceiveDay(state))
         }
     }

@@ -16,7 +16,7 @@ async fn receive_full_name(
 ) -> TransitionOut<Dialogue> {
     let mut full_name = ans.split_whitespace();
     if full_name.clone().by_ref().count() != 3usize {
-        cx.answer("Неверно введено ФИО, попробуйте еще раз!")
+        cx.answer("Неправильно введено ПІБ, спробуйте ще раз!")
             .await?;
         next(Dialogue::ReceiveFullName(state))
     } else {
@@ -34,16 +34,19 @@ async fn receive_full_name(
                         patronymic.to_string(),
                         last_name.to_string(),
                     );
-                    cx.answer("Введите номер телефона в формате +380XXXXXXXXX или 0XXXXXXXXX")
+                    cx.answer("Введіть номер телефону в форматі +380XXXXXXXXX або 0XXXXXXXXX")
                         .await?;
                     next(Dialogue::ReceivePhone(receive_phone_state))
                 } else {
-                    cx.answer("Вас не удалось найти в списке заявок на поступление, возможно вы ошибились в введенных данных. Попробуйте еще раз.").await?;
+                    cx.answer("Вас не вдалося знайти в списку заявок на вступ, можливо ви помилитися при введенні даних. Спробуйте ще раз.").await?;
                     next(Dialogue::ReceiveFullName(state))
                 }
             }
             Err(error) => {
-                cx.answer("Произошла ошибка при проверка валидности пользователя, попробуйте еще раз ввести ФИО").await?;
+                cx.answer(
+                    "Помилка під час перевірки валідності користувача, спробуйте ще раз ввести ПІБ",
+                )
+                .await?;
                 log::error!("Database error while enrollee check: {}", error);
                 next(Dialogue::ReceiveFullName(state))
             }

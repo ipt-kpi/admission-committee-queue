@@ -39,11 +39,11 @@ async fn receive_phone(
     });
     if regex.is_match(&ans) {
         cx.answer(format!(
-            "Итоговые данные: \n\
-            Фамилия: {}\n\
-            Имя: {}\n\
-            Отчество: {}\n\
-            Телефон: {}",
+            "Підсумкові дані: \n\
+             Прізвище: {} \n\
+             Ім'я: {} \n\
+             По батькові: {} \n\
+             Телефон: {}",
             state.last_name, state.name, state.patronymic, ans
         ))
         .await?;
@@ -51,7 +51,7 @@ async fn receive_phone(
         match cx.update.from() {
             Some(user) => {
                 let enrollee = Enrollee {
-                    id: cx.update.chat.id,
+                    chat_id: cx.update.chat.id,
                     username: user.username.as_ref().map_or(String::new(), String::from),
                     name: state.name,
                     patronymic: state.patronymic,
@@ -60,26 +60,23 @@ async fn receive_phone(
                 };
                 if let Err(error) = Database::global().register(enrollee).await {
                     log::error!("Database error while register: {}", error);
-                    cx.answer("Произошла ошибка при регистрации пользователя!")
-                        .await?;
+                    cx.answer("Помилка при реєстрації користувача!").await?;
                     next(Dialogue::ReceiveFullName(ReceiveFullNameState))
                 } else {
-                    cx.answer("Выберите день недели для записи")
+                    cx.answer("Виберіть день тижня для запису")
                         .reply_markup(Queue::global().get_days_keyboard())
                         .await?;
                     next(Dialogue::ReceiveDay(ReceiveDayState))
                 }
             }
             None => {
-                cx.answer(
-                    "Не удалось получить данные о пользователе, попробуйте еще раз ввести ФИО",
-                )
-                .await?;
+                cx.answer("Не вдалося отримати дані про користувача, спробуйте ще раз ввести ПІБ")
+                    .await?;
                 next(Dialogue::ReceiveFullName(ReceiveFullNameState))
             }
         }
     } else {
-        cx.answer("Неверно введен номер телефона, попробуйте еще раз!")
+        cx.answer("Неправильно введено номер телефону, спробуйте ще раз!")
             .await?;
         next(Dialogue::ReceivePhone(state))
     }

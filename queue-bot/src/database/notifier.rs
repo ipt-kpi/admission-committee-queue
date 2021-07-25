@@ -27,10 +27,10 @@ impl Notifier {
                 if let Some(count) = payload.get("f2").map(|count| count.as_i64()).flatten() {
                     let message = match count {
                         0 => {
-                            format!("Подошла ваша очередь!")
+                            format!("Підійшла ваша черга!")
                         }
                         count => {
-                            format!("Перед вами в очереди находится {} человек(а)", count)
+                            format!("Перед вами в черзі перебуває {} людина(-и, -ей)", count)
                         }
                     };
                     if let Err(error) = self.bot.send_message(id, message).await {

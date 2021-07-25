@@ -42,8 +42,8 @@ impl Database<Json> {
     }
 
     pub async fn register(&self, enrollee: Enrollee) -> Result<()> {
-        sqlx::query("INSERT INTO enrollee (id, username, name, patronymic, last_name, phone_number) VALUES ($1,$2,$3,$4,$5,$6)")
-            .bind(enrollee.id)
+        sqlx::query("INSERT INTO enrollee (chat_id, username, name, patronymic, last_name, phone_number) VALUES ($1,$2,$3,$4,$5,$6)")
+            .bind(enrollee.chat_id)
             .bind(enrollee.username)
             .bind(enrollee.name)
             .bind(enrollee.patronymic)
@@ -62,7 +62,7 @@ impl Database<Json> {
     }
 
     pub async fn is_banned(&self, id: i64) -> Result<bool> {
-        sqlx::query("SELECT banned FROM enrollee WHERE id = $1")
+        sqlx::query("SELECT banned FROM enrollee WHERE chat_id = $1")
             .bind(id)
             .fetch_optional(&self.pool)
             .await
@@ -133,7 +133,7 @@ impl Database<Json> {
     }
 
     pub async fn check_time(&self, date: NaiveDate, time: NaiveTime) -> Result<bool> {
-        sqlx::query("SELECT * FROM exists(SELECT 1 FROM queue WHERE date = $1 AND time = $2)")
+        sqlx::query("SELECT exists(SELECT 1 FROM queue WHERE date = $1 AND time = $2)")
             .bind(date)
             .bind(time)
             .fetch_one(&self.pool)
@@ -152,6 +152,15 @@ impl Database<Json> {
             .bind(id)
             .bind(date)
             .bind(time)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|error| anyhow::anyhow!(error))
+            .map(|row| row.get(0))
+    }
+
+    pub async fn toggle_notification(&self, id: i64) -> Result<bool> {
+        sqlx::query("UPDATE enrollee SET notification = NOT notification WHERE chat_id = $1 RETURNING notification")
+            .bind(id)
             .fetch_one(&self.pool)
             .await
             .map_err(|error| anyhow::anyhow!(error))

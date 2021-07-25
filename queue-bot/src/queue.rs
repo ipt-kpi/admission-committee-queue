@@ -3,7 +3,7 @@ use chrono::{Local, NaiveDate, NaiveTime};
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use teloxide::types::{KeyboardButton, KeyboardMarkup};
 
 use crate::config;
@@ -22,10 +22,10 @@ static INSTANCE: OnceCell<Queue> = OnceCell::new();
 
 pub struct Queue {
     agree_keyboard: KeyboardMarkup,
-    schedule: HashMap<NaiveDate, Schedule>,
+    schedule: BTreeMap<NaiveDate, Schedule>,
 }
 
-pub async fn initialize(schedule: HashMap<NaiveDate, Schedule>) -> Result<()> {
+pub async fn initialize(schedule: BTreeMap<NaiveDate, Schedule>) -> Result<()> {
     let agree_keyboard = KeyboardMarkup::default()
         .append_row(vec![KeyboardButton::new("✅"), KeyboardButton::new("❌")])
         .resize_keyboard(true);
@@ -61,7 +61,7 @@ impl Queue {
         let schedule = self
             .schedule
             .get(&date)
-            .context("Указанный день не найден")?;
+            .context("Зазначений день не знайдено")?;
         match Database::global()
             .get_intervals(
                 date,
@@ -73,11 +73,11 @@ impl Queue {
         {
             Ok(intervals) => {
                 let keyboard = Self::gen_two_columns_keyboard(intervals.into_iter());
-                Ok(keyboard.append_row(vec![KeyboardButton::new("Назад 🔙")]))
+                Ok(keyboard.append_row(vec![KeyboardButton::new("Повернутись назад 🔙")]))
             }
             Err(error) => {
                 log::error!("Database error: {}", error);
-                Err(anyhow::anyhow!("Произошла ошибка при выполнение команды"))
+                Err(anyhow::anyhow!("ППомилка при виконанні команди"))
             }
         }
     }
@@ -91,7 +91,7 @@ impl Queue {
         let schedule = self
             .schedule
             .get(&date)
-            .context("Указанный день не найден")?;
+            .context("Зазначений день не знайдено")?;
         match Database::global()
             .get_intervals_between(
                 date,
@@ -106,13 +106,13 @@ impl Queue {
             Ok(intervals) => {
                 let keyboard = Self::gen_two_columns_keyboard(intervals.into_iter());
                 Ok(keyboard.append_row(vec![
-                    KeyboardButton::new("Назад 🔙"),
-                    KeyboardButton::new("Выбор другой даты 🔙"),
+                    KeyboardButton::new("Повернутись назад 🔙"),
+                    KeyboardButton::new("Вибір іншої дати 🔙"),
                 ]))
             }
             Err(error) => {
                 log::error!("Database error: {}", error);
-                Err(anyhow::anyhow!("Произошла ошибка при выполнение команды"))
+                Err(anyhow::anyhow!("Помилка при виконанні команди"))
             }
         }
     }
