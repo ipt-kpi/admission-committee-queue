@@ -16,10 +16,10 @@ mod user;
 
 #[tokio::main]
 async fn main() {
-    let config = Config::new("config.json.bak-bot")
+    let config = Config::new("config.json")
         .await
         .expect("Failed to initialize config");
-    let bot = Bot::from_env().auto_send();
+    let bot = Bot::new(&config.token).auto_send();
     let notifier = Notifier::new(&config.database_url, bot.clone())
         .await
         .expect("Failed to initialize notifier");

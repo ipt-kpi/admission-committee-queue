@@ -17,7 +17,6 @@ pub mod time_format;
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     pub token: String,
-    pub bot_name: String,
     pub database_url: String,
     pub max_connections: u32,
     #[serde(with = "date_format")]
@@ -36,7 +35,6 @@ impl Default for Config {
         map.insert(date, schedule);
         Config {
             token: "".to_string(),
-            bot_name: "IPT Queue".to_string(),
             database_url: "".to_string(),
             max_connections: 5,
             schedule: map,
