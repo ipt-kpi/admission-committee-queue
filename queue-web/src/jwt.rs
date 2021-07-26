@@ -2,6 +2,9 @@ use anyhow::Result;
 use chrono::{Duration, TimeZone, Utc};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 use uuid::Uuid;
 use warp::Reply;
 
@@ -33,10 +36,14 @@ impl From<AuthInfo> for AccessToken {
 }
 
 impl Jwt {
-    pub fn new() -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(public_key: P, private_key: P) -> Result<Self> {
+        let mut decoding_buffer = Box::leak(Box::new(Vec::new()));
+        let mut encoding_buffer = Box::leak(Box::new(Vec::new()));
+        File::open(public_key)?.read_to_end(&mut decoding_buffer)?;
+        File::open(private_key)?.read_to_end(&mut encoding_buffer)?;
         Ok(Jwt {
-            decoding_key: DecodingKey::from_ec_pem(include_bytes!("../public_key.pem")).unwrap(),
-            encoding_key: EncodingKey::from_ec_pem(include_bytes!("../private_key.pem")).unwrap(),
+            decoding_key: DecodingKey::from_ec_pem(decoding_buffer)?,
+            encoding_key: EncodingKey::from_ec_pem(decoding_buffer)?,
         })
     }
 

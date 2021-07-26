@@ -9,6 +9,8 @@ pub struct Config {
     pub max_connections: u32,
     pub address: String,
     pub recaptcha_token: String,
+    pub public_key: String,
+    pub private_key: String,
 }
 
 impl Config {
@@ -36,6 +38,8 @@ impl Default for Config {
             max_connections: 5,
             address: "127.0.0.1:3030".to_string(),
             recaptcha_token: "".to_string(),
+            public_key: "".to_string(),
+            private_key: "".to_string(),
         }
     }
 }

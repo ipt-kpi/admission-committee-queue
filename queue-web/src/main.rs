@@ -28,7 +28,7 @@ impl Application {
     async fn new(config: Config) -> Result<Self> {
         Ok(Application {
             database: Database::new(config.max_connections, &config.database_url).await?,
-            jwt: Jwt::new()?,
+            jwt: Jwt::new(config.public_key, config.private_key)?,
             recaptcha: ReCaptcha::new(config.recaptcha_token),
         })
     }
