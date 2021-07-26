@@ -17,7 +17,7 @@ pub struct Queue {
     pub phone_number: String,
     pub username: String,
     pub status: Status,
-    pub id: i64,
+    pub id: i32,
 }
 
 pub struct StudentsQueue(pub Vec<Queue>);
