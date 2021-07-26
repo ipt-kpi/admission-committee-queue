@@ -140,6 +140,7 @@ export default {
     value: [],
     statusItems: [
       { text: "Ожидает", value: "wait" },
+      { text: "Внутри", value: "inside" },
       { text: "Прошел", value: "processed" },
       { text: "Отсутствует", value: "absent" }
     ],

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS enrollee (
     notification BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TYPE status AS ENUM ('wait', 'processed', 'absent');
+CREATE TYPE status AS ENUM ('wait', 'inside', 'processed', 'absent');
 
 CREATE TABLE IF NOT EXISTS queue (
     enrollee INTEGER REFERENCES enrollee(id) PRIMARY KEY,

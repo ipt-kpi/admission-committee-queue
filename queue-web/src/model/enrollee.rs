@@ -23,6 +23,7 @@ pub struct Enrollee {
 #[serde(rename_all = "lowercase")]
 pub enum Status {
     Wait,
+    Inside,
     Processed,
     Absent,
 }
@@ -35,6 +36,9 @@ impl fmt::Display for Status {
             match self {
                 Status::Wait => {
                     "wait"
+                }
+                Status::Inside => {
+                    "inside"
                 }
                 Status::Processed => {
                     "processed"
@@ -53,6 +57,7 @@ impl FromStr for Status {
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         match input {
             "wait" => Ok(Status::Wait),
+            "inside" => Ok(Status::Inside),
             "processed" => Ok(Status::Processed),
             "absent" => Ok(Status::Absent),
             _ => Err("Failed to determine status from input"),
