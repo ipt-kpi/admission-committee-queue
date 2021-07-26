@@ -41,17 +41,18 @@ impl Database<Json> {
         INSTANCE.get().expect("Pool isn't initialized")
     }
 
-    pub async fn register(&self, enrollee: Enrollee) -> Result<()> {
-        sqlx::query("INSERT INTO enrollee (chat_id, username, name, patronymic, last_name, phone_number) VALUES ($1,$2,$3,$4,$5,$6)")
+    pub async fn register(&self, enrollee: Enrollee) -> Result<i32> {
+        sqlx::query("INSERT INTO enrollee (chat_id, username, name, patronymic, last_name, phone_number) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id")
             .bind(enrollee.chat_id)
             .bind(enrollee.username)
             .bind(enrollee.name)
             .bind(enrollee.patronymic)
             .bind(enrollee.last_name)
             .bind(enrollee.phone_number)
-            .execute(&self.pool)
-            .await?;
-        Ok(())
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|error| anyhow::anyhow!(error))
+            .map(|row| row.get(0))
     }
 
     pub async fn get_occupied_time(

@@ -27,7 +27,16 @@ impl Notifier {
                 if let Some(count) = payload.get("f2").map(|count| count.as_i64()).flatten() {
                     let message = match count {
                         0 => {
-                            format!("Підійшла ваша черга!")
+                            if let Some(number) =
+                                payload.get("f3").map(|number| number.as_i64()).flatten()
+                            {
+                                format!(
+                                    "Підійшла ваша черга, ви маєте порядковий номер: {}!",
+                                    number
+                                )
+                            } else {
+                                format!("Підійшла ваша черга!")
+                            }
                         }
                         count => {
                             format!("Перед вами в черзі перебуває {} людина(-и, -ей)", count)

@@ -2,6 +2,7 @@ use once_cell::sync::OnceCell;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use teloxide::prelude::*;
+use teloxide::types::ParseMode;
 
 use crate::database::Database;
 use crate::dialogue::states::{ReceiveDayState, ReceiveFullNameState};
@@ -38,35 +39,39 @@ async fn receive_phone(
         Regex::new(r"^\+?3?8?(0\d{9})$").expect("Failed to create phone number regex!")
     });
     if regex.is_match(&ans) {
-        cx.answer(format!(
-            "Підсумкові дані: \n\
-             Прізвище: {} \n\
-             Ім'я: {} \n\
-             По батькові: {} \n\
-             Телефон: {}",
-            state.last_name, state.name, state.patronymic, ans
-        ))
-        .await?;
-
         match cx.update.from() {
             Some(user) => {
                 let enrollee = Enrollee {
                     chat_id: cx.update.chat.id,
                     username: user.username.as_ref().map_or(String::new(), String::from),
-                    name: state.name,
-                    patronymic: state.patronymic,
-                    last_name: state.last_name,
-                    phone_number: ans,
+                    name: state.name.clone(),
+                    patronymic: state.patronymic.clone(),
+                    last_name: state.last_name.clone(),
+                    phone_number: ans.clone(),
                 };
-                if let Err(error) = Database::global().register(enrollee).await {
-                    log::error!("Database error while register: {}", error);
-                    cx.answer("Помилка при реєстрації користувача!").await?;
-                    next(Dialogue::ReceiveFullName(ReceiveFullNameState))
-                } else {
-                    cx.answer("Виберіть день тижня для запису")
-                        .reply_markup(Queue::global().get_days_keyboard())
+                match Database::global().register(enrollee).await {
+                    Ok(id) => {
+                        cx.answer(format!(
+                            "Підсумкові дані: \n\
+                            Прізвище: {} \n\
+                            Ім'я: {} \n\
+                            По батькові: {} \n\
+                            Телефон: {} \n\
+                            <b>Порядковий номер для виклику: {}</b>",
+                            state.last_name, state.name, state.patronymic, ans, id
+                        ))
+                        .parse_mode(ParseMode::Html)
                         .await?;
-                    next(Dialogue::ReceiveDay(ReceiveDayState))
+                        cx.answer("Виберіть день тижня для запису")
+                            .reply_markup(Queue::global().get_days_keyboard())
+                            .await?;
+                        next(Dialogue::ReceiveDay(ReceiveDayState))
+                    }
+                    Err(error) => {
+                        log::error!("Database error while register: {}", error);
+                        cx.answer("Помилка при реєстрації користувача!").await?;
+                        next(Dialogue::ReceiveFullName(ReceiveFullNameState))
+                    }
                 }
             }
             None => {
