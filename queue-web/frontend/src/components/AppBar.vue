@@ -96,7 +96,7 @@
             <span class="mr-2">Пользователь</span>
           </v-btn>
         </span>
-``        <span v-if="$store.state.user.admin">
+        <span v-if="$store.state.user.admin">
           <v-menu offset-y>
             <template v-slot:activator="{ on }">
               <v-btn text v-on="on">
