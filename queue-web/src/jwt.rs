@@ -43,7 +43,7 @@ impl Jwt {
         File::open(private_key)?.read_to_end(&mut encoding_buffer)?;
         Ok(Jwt {
             decoding_key: DecodingKey::from_ec_pem(decoding_buffer)?,
-            encoding_key: EncodingKey::from_ec_pem(decoding_buffer)?,
+            encoding_key: EncodingKey::from_ec_pem(encoding_buffer)?,
         })
     }
 
