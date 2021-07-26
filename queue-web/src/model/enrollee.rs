@@ -7,7 +7,7 @@ use std::str::FromStr;
 #[derive(Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Enrollee {
-    pub id: i64,
+    pub id: i32,
     pub last_name: String,
     pub name: String,
     pub patronymic: String,
