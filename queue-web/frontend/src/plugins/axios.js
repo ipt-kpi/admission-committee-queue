@@ -16,6 +16,7 @@ _axios.interceptors.request.use(
   async function(config) {
     let user = store.state.user;
     if (
+      config.url !== "/user/auth/refresh-session" &&
       user.login &&
       (user.exp - 10 <= new Date().getTime() / 1000 || user.token == null)
     ) {
