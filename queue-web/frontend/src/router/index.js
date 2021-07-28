@@ -1,9 +1,10 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
-import Register from "../views/Register";
+import UserRegister from "../views/Register";
 import Login from "../views/Login";
 import Edit from "../views/admin/queue/Edit";
+import QueueRegister from "../views/admin/queue/Register";
 import store from "../store";
 
 const originalPush = VueRouter.prototype.push;
@@ -46,7 +47,7 @@ const routes = [
   {
     path: "/register",
     name: "Register",
-    component: Register,
+    component: UserRegister,
     beforeEnter: ifNotAuthenticated
   },
   {
@@ -57,12 +58,13 @@ const routes = [
   },
   { path: "/user", beforeEnter: ifAuthenticated },
   {
-    path: "/admin/queue/register",
+    path: "/admin/queue/edit",
+    component: Edit,
     beforeEnter: ifAdmin
   },
   {
-    path: "/admin/queue/edit",
-    component: Edit,
+    path: "/admin/queue/register",
+    component: QueueRegister,
     beforeEnter: ifAdmin
   }
 ];

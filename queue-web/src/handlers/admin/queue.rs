@@ -1,4 +1,5 @@
 use chrono::NaiveDate;
+use serde::Deserialize;
 use warp::Reply;
 
 use crate::model::enrollee::{Enrollee, Status};
@@ -52,4 +53,34 @@ pub async fn students_queue(
         Ok(queue) => Ok(queue),
         Err(error) => reject!(error),
     }
+}
+
+pub async fn relevant_time(
+    date: NaiveDate,
+    app: &'static Application,
+    _auth_info: AuthInfo,
+) -> Result<impl Reply, warp::Rejection> {
+    let relevant_time = reject_result!(app.database.get_relevant_time(date).await);
+    Ok(warp::reply::json(&serde_json::json!({
+        "relevantTime": relevant_time
+    })))
+}
+
+#[derive(Deserialize)]
+pub struct QueueInfo {
+    pub last_name: String,
+    pub name: String,
+    pub patronymic: String,
+    pub phone_number: String,
+    pub date: String,
+    pub time: String,
+}
+
+pub async fn register(
+    info: QueueInfo,
+    app: &'static Application,
+    _auth_info: AuthInfo,
+) -> Result<impl Reply, warp::Rejection> {
+    let id = reject_result!(app.database.register_in_queue(info).await);
+    Ok(warp::reply::json(&serde_json::json!({ "id": id })))
 }

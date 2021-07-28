@@ -4,6 +4,7 @@ use crate::handlers::{admin, user};
 use crate::model::enrollee::Status;
 use crate::model::user::Role;
 use crate::Application;
+use chrono::NaiveDate;
 
 mod jwt;
 
@@ -85,11 +86,23 @@ fn queue_routes(
         .and(with_app(app))
         .and(jwt::jwt_filter(app, vec![Role::Admin]))
         .and_then(admin::queue::students_queue);
+    let relevant_time = warp::path!("relevant-time" / NaiveDate)
+        .and(with_app(app))
+        .and(jwt::jwt_filter(app, vec![Role::Admin]))
+        .and_then(admin::queue::relevant_time);
+    let register = warp::path("register")
+        .and(warp::post())
+        .and(warp::body::json())
+        .and(with_app(app))
+        .and(jwt::jwt_filter(app, vec![Role::Admin]))
+        .and_then(admin::queue::register);
     let routes = dates
         .or(enrollees)
         .or(processed)
         .or(update)
-        .or(students_queue);
+        .or(students_queue)
+        .or(relevant_time)
+        .or(register);
     warp::path("queue").and(routes)
 }
 

@@ -1,14 +1,18 @@
 use anyhow::Result;
-use chrono::{Duration, NaiveDate, Utc};
+use chrono::{Duration, NaiveDate, NaiveTime, Utc};
 use sqlx::postgres::{PgPoolOptions, PgRow};
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
+use crate::handlers::admin::queue::QueueInfo;
 use crate::handlers::user::auth::RegistrationInfo;
 use crate::hash;
 use crate::model::enrollee::{Enrollee, Status};
 use crate::model::queue::{Queue, StudentsQueue};
 use crate::model::user::User;
+use sqlx::postgres::types::PgInterval;
+use std::collections::HashMap;
+use std::convert::TryFrom;
 
 pub struct Database {
     pub pool: PgPool,
@@ -190,5 +194,42 @@ impl Database {
         .await
         .map_err(|error| anyhow::anyhow!(error))
         .map(|queue| StudentsQueue(queue))
+    }
+
+    //TODO remove hardcoded args
+    pub async fn get_relevant_time(&self, date: NaiveDate) -> Result<HashMap<u8, Vec<u8>>> {
+        let interval =
+            PgInterval::try_from(Duration::minutes(7)).map_err(|error| anyhow::anyhow!(error))?;
+        let rows = sqlx::query("SELECT extract(hour FROM time), extract(minutes FROM time) FROM get_relevant_time($1,$2,$3,$4) as time")
+            .bind(date)
+            .bind(NaiveTime::from_hms(9, 0, 0))
+            .bind(77i32)
+            .bind(interval)
+            .fetch_all(&self.pool)
+            .await?;
+        Ok(rows.iter().fold(HashMap::new(), |mut map, row| {
+            map.entry(row.get::<f64, _>(0) as u8)
+                .or_insert_with(|| Vec::new())
+                .push(row.get::<f64, _>(1) as u8);
+            map
+        }))
+    }
+
+    pub async fn register_in_queue(&self, info: QueueInfo) -> Result<i32> {
+        let id = sqlx::query("INSERT INTO enrollee (last_name, name, patronymic, phone_number) VALUES ($1, $2, $3, $4) RETURNING id")
+            .bind(info.last_name)
+            .bind(info.name)
+            .bind(info.patronymic)
+            .bind(info.phone_number)
+            .fetch_one(&self.pool)
+            .await
+            .map(|row| row.get(0))?;
+        sqlx::query("INSERT INTO queue (enrollee, date, time) VALUES ($1, $2, $3)")
+            .bind(id)
+            .bind(NaiveDate::parse_from_str(&info.date, "%Y-%m-%d")?)
+            .bind(NaiveTime::parse_from_str(&info.time, "%H:%M")?)
+            .execute(&self.pool)
+            .await?;
+        Ok(id)
     }
 }
