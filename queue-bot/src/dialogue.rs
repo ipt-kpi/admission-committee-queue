@@ -6,7 +6,7 @@ use crate::dialogue::states::{
     ReceivePhoneState, ReceiveTimeState, StartState,
 };
 
-mod states;
+pub mod states;
 
 #[derive(Transition, Serialize, Deserialize)]
 pub enum Dialogue {
@@ -18,6 +18,15 @@ pub enum Dialogue {
     ReceiveDay(ReceiveDayState),
     ReceiveInterval(ReceiveIntervalState),
     ReceiveTime(ReceiveTimeState),
+}
+
+impl Dialogue {
+    pub fn is_start(&self) -> bool {
+        match &self {
+            Dialogue::Start(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl Default for Dialogue {

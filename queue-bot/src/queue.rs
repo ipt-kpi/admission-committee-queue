@@ -47,6 +47,7 @@ impl Queue {
         self.agree_keyboard.clone()
     }
 
+    //TODO time with timezone
     pub fn get_days_keyboard(&self) -> KeyboardMarkup {
         let current_date = Local::now().date().naive_utc();
         Self::gen_two_columns_keyboard(
@@ -57,6 +58,7 @@ impl Queue {
         )
     }
 
+    //TODO filter intervals
     pub async fn get_intervals_keyboard(&self, date: NaiveDate) -> Result<KeyboardMarkup> {
         let schedule = self
             .schedule
