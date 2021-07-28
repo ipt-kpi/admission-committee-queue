@@ -8,7 +8,7 @@ pub struct Captcha;
 
 impl Captcha {
     pub async fn send(cx: &TransitionIn<AutoSend<Bot>>) -> Result<String> {
-        let (answer, file) = captcha::gen(Difficulty::Medium)
+        let (answer, file) = captcha::gen(Difficulty::Easy)
             .as_tuple()
             .map(|(answer, data)| (answer, InputFile::memory("captcha", Cow::from(data))))
             .context(anyhow::anyhow!("Failed to generate captcha png"))?;
