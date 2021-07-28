@@ -167,6 +167,26 @@ impl Database<Json> {
             .map_err(|error| anyhow::anyhow!(error))
             .map(|row| row.get(0))
     }
+
+    //TODO cascade delete
+    pub async fn refresh_user_state(&self, id: i64) -> Result<()> {
+        let id: Option<i32> = sqlx::query("SELECT id FROM enrollee WHERE chat_id = $1")
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await
+            .map(|id| id.map(|row| row.get(0)))?;
+        if let Some(id) = id {
+            sqlx::query("DELETE FROM queue WHERE enrollee = $1")
+                .bind(id)
+                .execute(&self.pool)
+                .await?;
+            sqlx::query("DELETE FROM enrollee WHERE id = $1")
+                .bind(id)
+                .execute(&self.pool)
+                .await?;
+        }
+        Ok(())
+    }
 }
 
 impl<S, D> Storage<D> for &'static Database<S>

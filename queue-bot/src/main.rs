@@ -5,6 +5,7 @@ use teloxide::prelude::*;
 use crate::config::Config;
 use crate::database::notifier::Notifier;
 use crate::database::Database;
+use crate::dialogue::states::StartState;
 use crate::dialogue::Dialogue;
 
 mod captcha;
@@ -59,8 +60,21 @@ async fn handle_message(
             cx.answer("Відправ мені текстове повідомлення").await?;
             next(dialogue)
         }
-        Some(ans) => {
-            if ans.starts_with("/toggle_notification") {
+        Some(ans) => match ans.as_str() {
+            "/start" | _ if !dialogue.is_start() => {
+                match Database::global()
+                    .refresh_user_state(cx.update.chat_id())
+                    .await
+                {
+                    Ok(()) => next(Dialogue::Start(StartState)),
+                    Err(error) => {
+                        cx.answer("Не вдалося перезапустити бота").await?;
+                        log::error!("Database error: {}", error);
+                        next(dialogue)
+                    }
+                }
+            }
+            "/toggle_notification" => {
                 match Database::global()
                     .toggle_notification(cx.update.chat_id())
                     .await
@@ -78,9 +92,8 @@ async fn handle_message(
                     }
                 };
                 next(dialogue)
-            } else {
-                dialogue.react(cx, ans).await
             }
-        }
+            ans => dialogue.react(cx, ans.to_string()).await,
+        },
     }
 }
