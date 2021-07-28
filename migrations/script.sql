@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS enrollee (
     id SERIAL PRIMARY KEY,
     chat_id BIGINT UNIQUE,
-    username VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL DEFAULT '',
     name VARCHAR(255) NOT NULL,
     patronymic VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS enrollee (
     notification BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TYPE status AS ENUM ('wait', 'inside', 'processed', 'absent');
+CREATE TYPE status AS ENUM ('wait', 'inside', 'filled', 'processed', 'absent');
 
 CREATE TABLE IF NOT EXISTS queue (
     enrollee INTEGER REFERENCES enrollee(id) PRIMARY KEY,

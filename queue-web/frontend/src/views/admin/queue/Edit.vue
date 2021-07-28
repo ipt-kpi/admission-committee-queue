@@ -141,6 +141,7 @@ export default {
     statusItems: [
       { text: "Ожидает", value: "wait" },
       { text: "Внутри", value: "inside" },
+      { text: "Заполнено", value: "filled" },
       { text: "Прошел", value: "processed" },
       { text: "Отсутствует", value: "absent" }
     ],
@@ -194,7 +195,7 @@ export default {
   created() {
     this.fetchDates().then(dates => {
       this.items = dates;
-      const today = new Date();
+      const today = new Date(new Date().toDateString());
 
       this.value = [
         // eslint-disable-next-line no-unused-vars

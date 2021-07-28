@@ -24,6 +24,7 @@ pub struct Enrollee {
 pub enum Status {
     Wait,
     Inside,
+    Filled,
     Processed,
     Absent,
 }
@@ -39,6 +40,9 @@ impl fmt::Display for Status {
                 }
                 Status::Inside => {
                     "inside"
+                }
+                Status::Filled => {
+                    "filled"
                 }
                 Status::Processed => {
                     "processed"
@@ -58,6 +62,7 @@ impl FromStr for Status {
         match input {
             "wait" => Ok(Status::Wait),
             "inside" => Ok(Status::Inside),
+            "filled" => Ok(Status::Filled),
             "processed" => Ok(Status::Processed),
             "absent" => Ok(Status::Absent),
             _ => Err("Failed to determine status from input"),
