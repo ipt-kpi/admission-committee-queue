@@ -63,20 +63,18 @@ async fn handle_message(
         }
         Some(ans) => match ans.as_str() {
             "/start" => {
+                cx.answer(
+                    "Щоб продовжити роботу з ботом, погодьтеся зі збором та обробкою персональних даних у вигляді ПІБ та номеру телефону",
+                )
+                    .reply_markup(Queue::global().get_agree_keyboard())
+                    .send()
+                    .await?;
                 if !dialogue.is_start() {
                     match Database::global()
                         .refresh_user_state(cx.update.chat_id())
                         .await
                     {
-                        Ok(()) => {
-                            cx.answer(
-                                "Щоб продовжити роботу з ботом, погодьтеся зі збором та обробкою персональних даних у вигляді ПІБ та номеру телефону",
-                            )
-                                .reply_markup(Queue::global().get_agree_keyboard())
-                                .send()
-                                .await?;
-                            next(Dialogue::Start(StartState))
-                        }
+                        Ok(()) => next(Dialogue::Start(StartState)),
                         Err(error) => {
                             cx.answer("Не вдалося перезапустити бота").await?;
                             log::error!("Database error: {}", error);
