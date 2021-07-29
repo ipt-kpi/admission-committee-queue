@@ -77,6 +77,11 @@
               ></v-date-picker>
             </v-menu>
 
+            <v-switch
+              v-model="exactTime"
+              label="Ручной ввод времени"
+              hide-details
+            ></v-switch>
             <v-menu
               v-model="timeMenu"
               :close-on-content-click="false"
@@ -89,7 +94,7 @@
                 <v-text-field
                   v-model="time"
                   label="Время"
-                  readonly
+                  :readonly="getExactState()"
                   prepend-icon="mdi-clock"
                   v-bind="attrs"
                   v-on="on"
@@ -137,6 +142,7 @@ export default {
       relevantTime: new Map([["", []]]),
       dateMenu: false,
       timeMenu: false,
+      exactTime: false,
       valid: true,
       rules: {
         name: [
@@ -176,6 +182,9 @@ export default {
         }
       }
     },
+    getExactState: function() {
+      return !this.exactTime;
+    },
     fetchRelevantTime: async function() {
       try {
         let response = await this.$axios.post(
@@ -193,10 +202,16 @@ export default {
     },
     allowedDates: val => Date.parse(val) >= new Date(new Date().toDateString()),
     allowedHours: function(v) {
-      return this.relevantTime.has(v.toString());
+      if (!this.exactTime) {
+        return this.relevantTime.has(v.toString());
+      }
+      return true;
     },
     allowedMinutes: function(v) {
-      return this.relevantTime.get(this.currentHour.toString()).includes(v);
+      if (!this.exactTime) {
+        return this.relevantTime.get(this.currentHour.toString()).includes(v);
+      }
+      return true;
     }
   }
 };
