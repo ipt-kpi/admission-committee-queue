@@ -7,6 +7,7 @@ use crate::database::notifier::Notifier;
 use crate::database::Database;
 use crate::dialogue::states::StartState;
 use crate::dialogue::Dialogue;
+use crate::queue::Queue;
 
 mod captcha;
 mod config;
@@ -67,7 +68,15 @@ async fn handle_message(
                         .refresh_user_state(cx.update.chat_id())
                         .await
                     {
-                        Ok(()) => next(Dialogue::Start(StartState)),
+                        Ok(()) => {
+                            cx.answer(
+                                "Щоб продовжити роботу з ботом, погодьтеся зі збором та обробкою персональних даних у вигляді ПІБ та номеру телефону",
+                            )
+                                .reply_markup(Queue::global().get_agree_keyboard())
+                                .send()
+                                .await?;
+                            next(Dialogue::Start(StartState))
+                        }
                         Err(error) => {
                             cx.answer("Не вдалося перезапустити бота").await?;
                             log::error!("Database error: {}", error);
