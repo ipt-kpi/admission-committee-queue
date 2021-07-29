@@ -61,17 +61,21 @@ async fn handle_message(
             next(dialogue)
         }
         Some(ans) => match ans.as_str() {
-            "/start" | _ if !dialogue.is_start() => {
-                match Database::global()
-                    .refresh_user_state(cx.update.chat_id())
-                    .await
-                {
-                    Ok(()) => next(Dialogue::Start(StartState)),
-                    Err(error) => {
-                        cx.answer("Не вдалося перезапустити бота").await?;
-                        log::error!("Database error: {}", error);
-                        next(dialogue)
+            "/start" => {
+                if !dialogue.is_start() {
+                    match Database::global()
+                        .refresh_user_state(cx.update.chat_id())
+                        .await
+                    {
+                        Ok(()) => next(Dialogue::Start(StartState)),
+                        Err(error) => {
+                            cx.answer("Не вдалося перезапустити бота").await?;
+                            log::error!("Database error: {}", error);
+                            next(dialogue)
+                        }
                     }
+                } else {
+                    next(dialogue)
                 }
             }
             "/toggle_notification" => {
