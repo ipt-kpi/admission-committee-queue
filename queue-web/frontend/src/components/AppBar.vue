@@ -55,14 +55,6 @@
             <template v-slot:activator>
               <v-list-item-title>Очередь</v-list-item-title>
             </template>
-            <v-list-item link @click="$router.push('/admin/queue/list')">
-              <v-list-item-action>
-                <v-icon>mdi-comment-text-outline</v-icon>
-              </v-list-item-action>
-              <v-list-item-content>
-                <v-list-item-title>Списки</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
             <v-list-item link @click="$router.push('/admin/queue/register')">
               <v-list-item-action>
                 <v-icon>mdi-account-multiple-plus</v-icon>

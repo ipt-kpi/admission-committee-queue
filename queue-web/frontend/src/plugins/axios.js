@@ -4,6 +4,7 @@ import Vue from "vue";
 import axios from "axios";
 import store from "../store";
 import fingerprint2 from "fingerprintjs2";
+import router from "@/router";
 
 let config = {
   baseURL: process.env.VUE_APP_API_URL || "",
@@ -66,6 +67,7 @@ _axios.interceptors.response.use(
     if (error.response) {
       if (error.response.status === 401) {
         store.commit("user/logout");
+        router.push("/login");
       }
     } else {
       store.commit("error", "Произошла ошибка подключения");

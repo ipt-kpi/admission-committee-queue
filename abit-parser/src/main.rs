@@ -100,10 +100,10 @@ fn parse_args() -> Result<AppArgs, pico_args::Error> {
 
 fn parse_year(s: &str) -> Result<u8, &'static str> {
     s.parse().map_err(|_| "not a number").and_then(|number| {
-        if number >= 15 && number <= 21 {
+        if number >= 15 {
             Ok(number)
         } else {
-            Err("no interval from 15 to 21")
+            Err("must be 15 or greater")
         }
     })
 }

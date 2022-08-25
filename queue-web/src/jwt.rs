@@ -80,21 +80,23 @@ impl Jwt {
             .timestamp(refresh_session.1, 0)
             .format("%a, %d %b %Y %H:%M:%S GMT")
             .to_string();
+        //TODO add Secure if want use SSL
         Ok(warp::reply::with_header(
             reply,
             "Set-Cookie",
             format!(
-                "refreshToken={}; Expires={}; Path=/api/user/auth; HttpOnly; SameSite=None; Secure",
+                "refreshToken={}; Expires={}; Path=/api/user/auth; HttpOnly; SameSite=None",
                 refresh_session.0, expires,
             ),
         ))
     }
 
     pub fn invalidate_session(&self) -> Result<impl Reply, warp::Rejection> {
+        //TODO add Secure if want use SSL
         Ok(warp::reply::with_header(
             warp::reply::reply(),
             "Set-Cookie", 
-            "refreshToken=invalid; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/api/user/auth; HttpOnly; SameSite=None; Secure"
+            "refreshToken=invalid; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/api/user/auth; HttpOnly; SameSite=None"
         ))
     }
 }

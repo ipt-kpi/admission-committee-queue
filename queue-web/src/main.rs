@@ -37,7 +37,7 @@ impl Application {
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::builder()
-        .filter_level(log::LevelFilter::Debug)
+        .filter_level(log::LevelFilter::Info)
         .init();
     info!("Read configuration...");
     let config = Config::new("config.json")?;
