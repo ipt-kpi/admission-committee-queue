@@ -1,6 +1,8 @@
 use anyhow::Result;
 use std::sync::Arc;
 use teloxide::prelude::*;
+use teloxide::types::MessageKind;
+use teloxide::RequestError;
 
 use crate::config::Config;
 use crate::database::notifier::Notifier;
@@ -58,7 +60,12 @@ async fn handle_message(
 ) -> TransitionOut<Dialogue> {
     match cx.update.text().map(ToOwned::to_owned) {
         None => {
-            cx.answer("Відправ мені текстове повідомлення").await?;
+            match cx.update.kind {
+                MessageKind::Pinned(_) => {}
+                _ => {
+                    cx.answer("Відправ мені текстове повідомлення").await?;
+                }
+            }
             next(dialogue)
         }
         Some(ans) => match ans.as_str() {

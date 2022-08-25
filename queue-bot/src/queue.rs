@@ -79,7 +79,7 @@ impl Queue {
             }
             Err(error) => {
                 log::error!("Database error: {}", error);
-                Err(anyhow::anyhow!("ППомилка при виконанні команди"))
+                Err(anyhow::anyhow!("Помилка при виконанні команди"))
             }
         }
     }

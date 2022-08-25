@@ -19,6 +19,10 @@ serde_json = "1.0"
 version = "1"
 features = ["rt-multi-thread", "macros"]
 
+[dependencies.tokio-util]
+version = "0.6.10"
+features = ["codec"]
+
 [dependencies.teloxide]
 version = "0.4"
 features = ["auto-send", "macros"]

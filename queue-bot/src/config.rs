@@ -21,6 +21,7 @@ pub struct Config {
     pub max_connections: u32,
     #[serde(with = "date_format")]
     pub schedule: BTreeMap<NaiveDate, Schedule>,
+    pub post: String,
 }
 
 impl Default for Config {
@@ -38,6 +39,7 @@ impl Default for Config {
             database_url: "".to_string(),
             max_connections: 5,
             schedule: map,
+            post: "".to_string(),
         }
     }
 }
@@ -64,7 +66,7 @@ impl Config {
     }
 
     pub async fn initialize_data(self) -> Result<()> {
-        database::initialize(self.max_connections, &self.database_url).await?;
+        database::initialize(self.max_connections, &self.database_url, self.post.clone()).await?;
         queue::initialize(self.schedule).await?;
         Ok(())
     }

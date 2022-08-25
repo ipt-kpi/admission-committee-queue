@@ -64,16 +64,32 @@ export default {
     };
   },
   created() {
-    this.$fingerprint.get(components => {
-      this.fingerprint = this.$fingerprint.x64hash128(
-        components
-          .map(pair => {
-            return pair.value;
-          })
-          .join(),
-        31
-      );
-    });
+    this.$fingerprint.get(
+      {
+        excludes: {
+          enumerateDevices: true,
+          pixelRatio: true,
+          doNotTrack: true,
+          fontsFlash: true,
+          plugins: true,
+          canvas: true,
+          webgl: true,
+          fonts: true,
+          audio: true,
+          adBlock: true
+        }
+      },
+      components => {
+        this.fingerprint = this.$fingerprint.x64hash128(
+          components
+            .map(pair => {
+              return pair.value;
+            })
+            .join(),
+          31
+        );
+      }
+    );
   },
   methods: {
     submit: async function() {

@@ -1,6 +1,7 @@
 use once_cell::sync::OnceCell;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use serde_json::error::Category::Data;
 use teloxide::prelude::*;
 use teloxide::types::ParseMode;
 
@@ -62,6 +63,12 @@ async fn receive_phone(
                         ))
                         .parse_mode(ParseMode::Html)
                         .await?;
+                        let msg = cx
+                            .answer(Database::global().post.clone())
+                            .parse_mode(ParseMode::Html)
+                            .await?;
+                        let id = cx.update.chat.id;
+                        cx.requester.pin_chat_message(id, msg.id).await;
                         cx.answer("Виберіть день тижня для запису")
                             .reply_markup(Queue::global().get_days_keyboard())
                             .await?;

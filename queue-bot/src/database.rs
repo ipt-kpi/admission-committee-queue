@@ -22,9 +22,10 @@ static INSTANCE: OnceCell<Database<Json>> = OnceCell::new();
 pub struct Database<S> {
     pool: PgPool,
     serializer: S,
+    pub post: String,
 }
 
-pub async fn initialize(max_connections: u32, url: &str) -> Result<()> {
+pub async fn initialize(max_connections: u32, url: &str, post: String) -> Result<()> {
     INSTANCE
         .set(Database {
             pool: PgPoolOptions::new()
@@ -32,6 +33,7 @@ pub async fn initialize(max_connections: u32, url: &str) -> Result<()> {
                 .connect(url)
                 .await?,
             serializer: Json,
+            post,
         })
         .map_err(|_| anyhow::anyhow!("Failed to initialize database!"))
 }

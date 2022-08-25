@@ -20,7 +20,20 @@ _axios.interceptors.request.use(
       user.login &&
       (user.exp - 10 <= new Date().getTime() / 1000 || user.token == null)
     ) {
-      const components = await fingerprint2.getPromise();
+      const components = await fingerprint2.getPromise({
+        excludes: {
+          enumerateDevices: true,
+          pixelRatio: true,
+          doNotTrack: true,
+          fontsFlash: true,
+          plugins: true,
+          canvas: true,
+          webgl: true,
+          fonts: true,
+          audio: true,
+          adBlock: true
+        }
+      });
       const key = components
         .map(pair => {
           return pair.value;
